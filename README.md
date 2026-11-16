@@ -41,6 +41,3 @@ Run tests: `python manage.py test`
 
 ## Deploying
 Set `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0` and `DJANGO_ALLOWED_HOSTS`, then run `python manage.py collectstatic` and serve with gunicorn plus a static file server (or WhiteNoise).
-
-## Contributing
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/). See `CONTRIBUTING.md`, and enable the commit-msg check with `git config core.hooksPath .githooks`.

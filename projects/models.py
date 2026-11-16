@@ -5,7 +5,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
-
+from django.core.exceptions import ValidationError
 
 class Status(models.TextChoices):
     APPROVED = "approved", "Approved"
@@ -63,6 +63,9 @@ class Project(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="projects")
     fiscal_year = models.PositiveIntegerField(default=current_year)
     budget = models.DecimalField("approved budget (PHP)", max_digits=14, decimal_places=2)
+    amount_utilized = models.DecimalField(
+        "amount utilized (PHP)", max_digits=14, decimal_places=2, default=0, validators=[MinValueValidator(0)]
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.APPROVED)
     progress_percent = models.PositiveSmallIntegerField(
         default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
@@ -89,6 +92,18 @@ class Project(models.Model):
             and self.status not in (Status.COMPLETED, Status.CANCELLED)
         )
 
+    @property
+    def remaining_budget(self):
+        return self.budget - self.amount_utilized
+
+    @property
+    def utilization_percent(self):
+        return round(self.amount_utilized / self.budget * 100) if self.budget else 0
+
+    def clean(self):
+        if self.budget is not None and self.amount_utilized is not None and self.amount_utilized > self.budget:
+            raise ValidationError({"amount_utilized": "Amount utilized cannot exceed the approved budget."})
+        
     def save(self, *args, **kwargs):
         needs_code = not self.code
         if needs_code:
@@ -98,7 +113,7 @@ class Project(models.Model):
             self.code = f"LDF-{self.fiscal_year}-{self.pk:04d}"
             super().save(update_fields=["code"])
 
-    def apply_update(self, status, progress, remarks="", user=None):
+    def apply_update(self, status, progress, remarks="", user=None, amount_utilized=None):
         """Record a status change in the history and sync the project's current state."""
         if status == Status.COMPLETED:
             progress = 100
@@ -108,7 +123,9 @@ class Project(models.Model):
             )
             self.status = status
             self.progress_percent = progress
-            self.save(update_fields=["status", "progress_percent", "updated_at"])
+            if amount_utilized is not None:
+                self.amount_utilized = amount_utilized
+            self.save(update_fields=["status", "progress_percent", "amount_utilized", "updated_at"])
         return update
 
 
