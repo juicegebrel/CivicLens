@@ -1,0 +1,46 @@
+# CivicLens
+
+Progress monitoring for Local Development Fund (LDF) projects. Barangays and constituents can see project status online instead of visiting the CPDO.
+
+## Features
+- **Public dashboard** with a status donut, KPIs, per-category stacked bars and latest updates. It refreshes itself every 30 seconds from `/api/stats/`.
+- **Project search** by keyword and category, with status and barangay filters.
+- **Status checker** at `/check/`: enter a reference code (e.g. `LDF-2026-0001`).
+- **Login**: barangay accounts see their own projects at `/my-projects/`; CPDO staff see all projects and can post status updates, which appear in each project's public history.
+- **Django admin** at `/admin/` to encode projects, barangays, categories and accounts.
+
+## Project structure
+One Django app per screen, each with its own views, URLs, templates, static files and tests.
+```
+config/        settings and root URLs
+templates/     base.html (shared layout)
+static/css/    civiclens.css (shared styles)
+projects/      models, admin, seed_demo; project search, detail and update-status screens
+dashboard/     home dashboard, infographics and /api/stats/
+statuscheck/   public status checker (/check/)
+accounts/      login, logout, "My projects", barangay profile, user admin
+```
+
+## Setup
+```
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py makemigrations accounts projects
+python manage.py migrate
+python manage.py seed_demo       # optional demo data
+python manage.py runserver
+```
+Open http://127.0.0.1:8000/
+
+Demo accounts (created by `seed_demo`): `cpdo` (staff) and `brgy_lahug` (Barangay Lahug), both with password `civiclens123`. Change these before any real use.
+
+To create a real admin: `python manage.py createsuperuser`. To link a barangay account, open the user in the admin and set the Barangay in the Profile section.
+
+Run tests: `python manage.py test`
+
+## Deploying
+Set `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0` and `DJANGO_ALLOWED_HOSTS`, then run `python manage.py collectstatic` and serve with gunicorn plus a static file server (or WhiteNoise).
+
+## Contributing
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/). See `CONTRIBUTING.md`, and enable the commit-msg check with `git config core.hooksPath .githooks`.
