@@ -14,7 +14,7 @@ class StatusUpdateInline(admin.TabularInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("code", "title", "barangay", "category", "status", "progress_percent", "budget", "fiscal_year")
+    list_display = ("code", "title", "barangay", "category", "status", "progress_percent", "budget", "amount_utilized", "fiscal_year")
     list_filter = ("status", "category", "barangay", "fiscal_year")
     search_fields = ("code", "title", "description", "barangay__name")
     readonly_fields = ("code", "created_at", "updated_at")

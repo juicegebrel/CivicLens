@@ -1,10 +1,25 @@
+from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from projects.models import Project
 from projects.services import status_summary
 
+from .forms import RegisterForm
 from .utils import user_barangay
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect("my_projects")
+    form = RegisterForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        login(request, user)
+        messages.success(request, "Welcome to CivicLens. Your account is ready.")
+        return redirect("my_projects")
+    return render(request, "accounts/register.html", {"form": form})
 
 
 @login_required

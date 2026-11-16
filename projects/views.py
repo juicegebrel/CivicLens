@@ -44,7 +44,9 @@ def update_status(request, code):
     })
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
-        project.apply_update(d["status"], d["progress_percent"], d["remarks"], request.user)
+        project.apply_update(
+            d["status"], d["progress_percent"], d["remarks"], request.user, d["amount_utilized"]
+        )
         messages.success(request, f"{project.code} is now marked “{project.get_status_display()}”.")
         return redirect(project)
     return render(request, "projects/update_status.html", {"project": project, "form": form})

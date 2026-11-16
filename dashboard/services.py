@@ -7,8 +7,11 @@ from projects.services import status_summary
 
 def build_stats():
     projects = Project.objects.all()
-    totals = projects.aggregate(budget=Sum("budget"), progress=Avg("progress_percent"))
-    completed_budget = projects.filter(status=Status.COMPLETED).aggregate(b=Sum("budget"))["b"] or 0
+    totals = projects.aggregate(
+        budget=Sum("budget"), utilized=Sum("amount_utilized"), progress=Avg("progress_percent")
+    )
+    allocated = float(totals["budget"] or 0)
+    utilized = float(totals["utilized"] or 0)
 
     categories = {}
     rows = projects.values("category__name", "category__slug", "status").annotate(n=Count("id"))
@@ -33,8 +36,10 @@ def build_stats():
     return {
         "total": projects.count(),
         "avg_progress": round(totals["progress"] or 0),
-        "total_budget": float(totals["budget"] or 0),
-        "completed_budget": float(completed_budget),
+        "total_allocated": allocated,
+        "total_utilized": utilized,
+        "total_remaining": allocated - utilized,
+        "utilization_percent": round(utilized / allocated * 100) if allocated else 0,
         "statuses": status_summary(projects),
         "categories": sorted(categories.values(), key=lambda c: -c["total"]),
         "recent": recent,

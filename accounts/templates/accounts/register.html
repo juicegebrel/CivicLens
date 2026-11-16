@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Create an account</h1>
+  <p class="lead">Register to follow your barangay's projects. You don’t need an account just to view project status.</p>
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+        {% for e in field.errors %}<small class="err">{{ e }}</small>{% endfor %}
+      </div>
+    {% endfor %}
+    <button class="btn">Create account</button>
+  </form>
+  <p class="muted">Already registered? <a href="{% url 'login' %}">Log in</a></p>
+</section>
+{% endblock %}

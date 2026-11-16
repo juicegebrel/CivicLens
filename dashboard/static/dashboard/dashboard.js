@@ -31,11 +31,13 @@
   }
 
   function render(stats) {
-    el("total").textContent = stats.total;
+        el("total").textContent = stats.total;
+    el("k-allocated").textContent = peso(stats.total_allocated);
+    el("k-utilized").textContent = peso(stats.total_utilized);
+    el("k-util-pct").textContent = stats.utilization_percent + "% of allocated money tapped";
+    el("k-util-bar").style.width = Math.min(100, stats.utilization_percent) + "%";
+    el("k-remaining").textContent = peso(stats.total_remaining);
     el("k-progress").textContent = stats.avg_progress + "%";
-    el("k-done").textContent = stats.statuses.find(s => s.key === "completed").count;
-    el("k-budget").textContent = peso(stats.total_budget);
-    el("k-spent").textContent = peso(stats.completed_budget);
     el("asof").textContent = "As of " + stats.as_of;
     drawDonut(stats);
 
