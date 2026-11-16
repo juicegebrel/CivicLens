@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Update status{% endblock %}
+{% block content %}
+<section class="narrow">
+  <p><a href="{{ project.get_absolute_url }}">Back to project</a></p>
+  <h1>Update status</h1>
+  <p class="lead">{{ project.title }}<br><span class="muted">{{ project.code }} · {{ project.barangay }}</span></p>
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <label>{{ field.label }}{{ field }}
+        {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+        {% for e in field.errors %}<small class="err">{{ e }}</small>{% endfor %}</label>
+    {% endfor %}
+    <button class="btn">Save update</button>
+  </form>
+</section>
+{% endblock %}

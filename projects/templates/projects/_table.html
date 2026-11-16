@@ -1,0 +1,20 @@
+{% load humanize %}
+<div class="scroll">
+<table>
+  <thead><tr><th>Project</th><th>Barangay</th><th>Category</th><th>Status</th><th>Progress</th><th class="num">Budget (₱)</th></tr></thead>
+  <tbody>
+  {% for p in projects %}
+    <tr>
+      <td><a href="{{ p.get_absolute_url }}"><strong>{{ p.title }}</strong></a><br><span class="muted">{{ p.code }}</span></td>
+      <td>{{ p.barangay }}</td>
+      <td>{{ p.category }}</td>
+      <td><span class="badge s-{{ p.status }}">{{ p.get_status_display }}</span></td>
+      <td><div class="meter" title="{{ p.progress_percent }}%"><i style="width:{{ p.progress_percent }}%"></i></div><span class="muted">{{ p.progress_percent }}%</span></td>
+      <td class="num">{{ p.budget|floatformat:2|intcomma }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="empty">No projects match. Try a different category, status or keyword.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
