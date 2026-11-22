@@ -33,11 +33,11 @@
   function render(stats) {
         el("total").textContent = stats.total;
     el("k-allocated").textContent = peso(stats.total_allocated);
-    el("k-utilized").textContent = peso(stats.total_utilized);
-    el("k-util-pct").textContent = stats.utilization_percent + "% of allocated money tapped";
-    el("k-util-bar").style.width = Math.min(100, stats.utilization_percent) + "%";
-    el("k-remaining").textContent = peso(stats.total_remaining);
-    el("k-progress").textContent = stats.avg_progress + "%";
+    el("k-committed").textContent = peso(stats.total_committed);
+    el("k-comm-pct").textContent = stats.committed_percent + "% of allocated money tapped";
+    el("k-comm-bar").style.width = Math.min(100, stats.committed_percent) + "%";
+    el("k-completed").textContent = peso(stats.total_completed);
+    el("k-barangays").textContent = stats.barangays_covered;
     el("asof").textContent = "As of " + stats.as_of;
     drawDonut(stats);
 
@@ -45,18 +45,18 @@
       `<li><a href="${cfg.list}?status=${s.key}"><span class="sw" style="background:${s.color}"></span>${esc(s.label)}</a><span class="n"><strong>${s.count}</strong></span></li>`
     ).join("");
 
-    const max = Math.max(1, ...stats.categories.map(c => c.total));
-    el("cats").innerHTML = stats.categories.map(c => {
+    const max = Math.max(1, ...stats.barangays.map(c => c.total));
+    el("brgys").innerHTML = stats.barangays.map(c => {
       const segs = stats.statuses.filter(s => c.by_status[s.key]).map(s =>
         `<span title="${esc(s.label)}: ${c.by_status[s.key]}" style="width:${(c.by_status[s.key] / max) * 100}%;background:${s.color}"></span>`
       ).join("");
-      return `<div class="cat"><a href="${cfg.list}?category=${encodeURIComponent(c.slug)}"><span>${esc(c.name)}</span><strong>${c.total}</strong></a><div class="stack-bar">${segs}</div></div>`;
+      return `<div class="cat"><a href="${cfg.list}?barangay=${c.id}"><span>${esc(c.name)}</span><strong>${c.total}</strong></a><div class="stack-bar">${segs}</div></div>`;
     }).join("") || '<p class="empty">No projects yet.</p>';
 
     el("recent").innerHTML = stats.recent.map(r =>
       `<li><a href="${cfg.detail}${encodeURIComponent(r.code)}/"><strong>${esc(r.title)}</strong></a><span class="muted">${esc(r.barangay)}</span>` +
       `<span class="badge"><span class="sw" style="background:${r.color};width:8px;height:8px"></span>${esc(r.status)}</span><span class="muted when">${esc(r.when)}</span></li>`
-    ).join("") || '<li class="empty">No updates yet.</li>';
+    ).join("") || '<li class="empty">No projects yet.</li>';
   }
 
   render(JSON.parse(el("stats-data").textContent));

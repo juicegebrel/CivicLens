@@ -18,3 +18,4 @@
 @media (max-width:800px){.hero,.two{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.kpis > div{border-bottom:1px solid var(--line)}}
 @media (prefers-reduced-motion:no-preference){.lens circle{transition:stroke-dasharray .6s ease}}
 .kpis .meter{width:100%;margin-top:8px}
+.note{margin:-10px 0 20px}

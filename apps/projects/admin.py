@@ -1,38 +1,36 @@
 from django.contrib import admin
-from .models import Barangay, Category, Project, StatusUpdate
+
+from .models import Barangay, BarangayProject, Project
 
 
-class StatusUpdateInline(admin.TabularInline):
-    model = StatusUpdate
-    extra = 0
-    readonly_fields = ("status", "progress_percent", "remarks", "updated_by", "created_at")
-    can_delete = False
-
-    def has_add_permission(self, request, obj=None):
-        return False
+class BarangayProjectInline(admin.TabularInline):
+    model = BarangayProject
+    extra = 1
 
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("code", "title", "barangay", "category", "status", "progress_percent", "budget", "amount_utilized", "fiscal_year")
-    list_filter = ("status", "category", "barangay", "fiscal_year")
-    search_fields = ("code", "title", "description", "barangay__name")
-    readonly_fields = ("code", "created_at", "updated_at")
-    inlines = [StatusUpdateInline]
-
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        # Keep the public update history in step with edits made here.
-        if not change or {"status", "progress_percent"} & set(form.changed_data):
-            StatusUpdate.objects.create(
-                project=obj, status=obj.status, progress_percent=obj.progress_percent,
-                remarks="Project encoded." if not change else "Updated by CPDO.", updated_by=request.user,
-            )
+    list_display = ("project_id", "project_name", "status", "amount", "project_date")
+    list_filter = ("status", "project_date")
+    search_fields = ("project_name", "barangays__barangay_name")
+    inlines = [BarangayProjectInline]
 
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
+@admin.register(Barangay)
+class BarangayAdmin(admin.ModelAdmin):
+    list_display = ("barangay_name", "barangay_code")
+    search_fields = ("barangay_name",)
+    actions = ["regenerate_codes"]
 
+    def get_fields(self, request, obj=None):
+        # The code is generated automatically; show it once the barangay exists.
+        return ("barangay_name", "barangay_code") if obj else ("barangay_name",)
 
-admin.site.register(Barangay)
+    def get_readonly_fields(self, request, obj=None):
+        return ("barangay_code",) if obj else ()
+
+    @admin.action(description="Generate a new registration code")
+    def regenerate_codes(self, request, queryset):
+        for barangay in queryset:
+            barangay.regenerate_code()
+        self.message_user(request, f"New registration code generated for {queryset.count()} barangay(s).")

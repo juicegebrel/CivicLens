@@ -9,7 +9,7 @@
     <p class="lead">Live status of Local Development Fund projects, from approval and bidding to completion. No trip to the CPDO needed.</p>
     <form class="inline-search" action="{% url 'status_check' %}" method="get">
       <label for="code">Have a reference code?</label>
-      <div><input id="code" name="code" placeholder="LDF-2026-0001" autocomplete="off"><button class="btn">Check status</button></div>
+      <div><input id="code" name="code" placeholder="LDF-0001" autocomplete="off"><button class="btn">Check status</button></div>
     </form>
     <p class="muted" id="asof">As of {{ stats.as_of }}</p>
   </div>
@@ -24,13 +24,14 @@
 <section class="kpis">
   <div><strong id="k-allocated">₱{{ stats.total_allocated|floatformat:0|intcomma }}</strong><span>total money allocated</span></div>
   <div>
-    <strong id="k-utilized">₱{{ stats.total_utilized|floatformat:0|intcomma }}</strong>
-    <span id="k-util-pct">{{ stats.utilization_percent }}% of allocated money tapped</span>
-    <div class="meter" title="Share of allocated money already used"><i id="k-util-bar" style="width:{{ stats.utilization_percent }}%"></i></div>
+    <strong id="k-committed">₱{{ stats.total_committed|floatformat:0|intcomma }}</strong>
+    <span id="k-comm-pct">{{ stats.committed_percent }}% of allocated money tapped</span>
+    <div class="meter" title="Funds of projects that are awarded, in process or completed"><i id="k-comm-bar" style="width:{{ stats.committed_percent }}%"></i></div>
   </div>
-  <div><strong id="k-remaining">₱{{ stats.total_remaining|floatformat:0|intcomma }}</strong><span>still available</span></div>
-  <div><strong id="k-progress">{{ stats.avg_progress }}%</strong><span>average project progress</span></div>
+  <div><strong id="k-completed">₱{{ stats.total_completed|floatformat:0|intcomma }}</strong><span>in completed projects</span></div>
+  <div><strong id="k-barangays">{{ stats.barangays_covered }}</strong><span>barangays with projects</span></div>
 </section>
+<p class="muted note">“Tapped” means the allocated amount of projects that are awarded, in process or completed.</p>
 
 <section class="two">
   <div class="panel">
@@ -38,13 +39,13 @@
     <ul id="legend" class="legend"></ul>
   </div>
   <div class="panel">
-    <h2>Projects by category</h2>
-    <div id="cats"></div>
+    <h2>Projects by barangay</h2>
+    <div id="brgys"></div>
   </div>
 </section>
 
 <section class="panel">
-  <h2>Latest updates</h2>
+  <h2>Latest projects</h2>
   <ul id="recent" class="recent"></ul>
 </section>
 

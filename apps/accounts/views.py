@@ -7,7 +7,7 @@ from apps.projects.models import Project
 from apps.projects.services import status_summary
 
 from .forms import RegisterForm
-from .utils import user_barangay
+from .utils import is_city_official, user_barangay
 
 
 def register(request):
@@ -17,7 +17,7 @@ def register(request):
     if request.method == "POST" and form.is_valid():
         user = form.save()
         login(request, user)
-        messages.success(request, "Welcome to CivicLens. Your account is ready.")
+        messages.success(request, f"Welcome! You are registered as an official of Barangay {form.barangay}.")
         return redirect("my_projects")
     return render(request, "accounts/register.html", {"form": form})
 
@@ -26,14 +26,15 @@ def register(request):
 def my_projects(request):
     barangay = user_barangay(request.user)
     if barangay:
-        qs = Project.objects.filter(barangay=barangay)
-    elif request.user.is_staff:
+        qs = Project.objects.filter(barangays=barangay)
+    elif is_city_official(request.user):
         qs = Project.objects.all()
     else:
         qs = Project.objects.none()
-    qs = qs.select_related("barangay", "category")
+    qs = qs.prefetch_related("barangay_links__barangay")
     return render(request, "accounts/my_projects.html", {
         "barangay": barangay,
+        "is_city_official": is_city_official(request.user),
         "projects": qs,
         "statuses": status_summary(qs),
     })

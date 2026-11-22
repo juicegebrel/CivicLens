@@ -1,19 +1,18 @@
 {% load humanize %}
 <div class="scroll">
 <table>
-  <thead><tr><th>Project</th><th>Barangay</th><th>Category</th><th>Status</th><th>Progress</th><th class="num">Budget (₱)</th></tr></thead>
+  <thead><tr><th>Project</th><th>Barangay and sitio</th><th>Status</th><th>Date</th><th class="num">Amount (₱)</th></tr></thead>
   <tbody>
   {% for p in projects %}
     <tr>
-      <td><a href="{{ p.get_absolute_url }}"><strong>{{ p.title }}</strong></a><br><span class="muted">{{ p.code }}</span></td>
-      <td>{{ p.barangay }}</td>
-      <td>{{ p.category }}</td>
+      <td><a href="{{ p.get_absolute_url }}"><strong>{{ p.project_name }}</strong></a><br><span class="muted">{{ p.code }}</span></td>
+      <td>{% for l in p.barangay_links.all %}{{ l.barangay.barangay_name }}{% if l.sitio %} <span class="muted">({{ l.sitio }})</span>{% endif %}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td>
       <td><span class="badge s-{{ p.status }}">{{ p.get_status_display }}</span></td>
-      <td><div class="meter" title="{{ p.progress_percent }}%"><i style="width:{{ p.progress_percent }}%"></i></div><span class="muted">{{ p.progress_percent }}%</span></td>
-      <td class="num">{{ p.budget|floatformat:2|intcomma }}</td>
+      <td>{{ p.project_date|date:"M d, Y" }}</td>
+      <td class="num">{{ p.amount|floatformat:2|intcomma }}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="6" class="empty">No projects match. Try a different category, status or keyword.</td></tr>
+    <tr><td colspan="5" class="empty">No projects match. Try a different status, barangay or keyword.</td></tr>
   {% endfor %}
   </tbody>
 </table>

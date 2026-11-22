@@ -1,11 +1,11 @@
-import uuid
+import re
+import secrets
 
-from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models, transaction
+from django.core.validators import MinValueValidator
+from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.core.exceptions import ValidationError
+
 
 class Status(models.TextChoices):
     APPROVED = "approved", "Approved"
@@ -17,7 +17,7 @@ class Status(models.TextChoices):
     CANCELLED = "cancelled", "Cancelled"
 
 
-# One colour per status, shared by the infographics and the badges (see civiclens.css).
+# One colour per status, shared by the infographics and the badges.
 STATUS_COLORS = {
     "approved": "#8793a6",
     "bidding": "#7a5cc2",
@@ -28,117 +28,80 @@ STATUS_COLORS = {
     "cancelled": "#4e5964",
 }
 
+# Projects in these statuses have started drawing on their allocated funds.
+COMMITTED_STATUSES = (Status.AWARDED, Status.IN_PROCESS, Status.COMPLETED)
 
-def current_year():
-    return timezone.localdate().year
+# No 0/O or 1/I/L, so codes are easy to read out and type.
+CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def generate_barangay_code():
+    """Random, unique registration code such as 'K7M2-QX9T'."""
+    while True:
+        raw = "".join(secrets.choice(CODE_ALPHABET) for _ in range(8))
+        code = f"{raw[:4]}-{raw[4:]}"
+        if not Barangay.objects.filter(barangay_code=code).exists():
+            return code
 
 
 class Barangay(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    barangay_id = models.AutoField(primary_key=True)
+    barangay_name = models.CharField(max_length=50, unique=True)
+    barangay_code = models.CharField(
+        max_length=50, unique=True, default=generate_barangay_code,
+        help_text="Give this code to the barangay's officials so they can register.",
+    )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["barangay_name"]
 
     def __str__(self):
-        return self.name
+        return self.barangay_name
 
-
-class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True)
-
-    class Meta:
-        ordering = ["name"]
-        verbose_name_plural = "categories"
-
-    def __str__(self):
-        return self.name
+    def regenerate_code(self):
+        self.barangay_code = generate_barangay_code()
+        self.save(update_fields=["barangay_code"])
 
 
 class Project(models.Model):
-    code = models.CharField("reference code", max_length=24, unique=True, editable=False)
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="projects")
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="projects")
-    fiscal_year = models.PositiveIntegerField(default=current_year)
-    budget = models.DecimalField("approved budget (PHP)", max_digits=14, decimal_places=2)
-    amount_utilized = models.DecimalField(
-        "amount utilized (PHP)", max_digits=14, decimal_places=2, default=0, validators=[MinValueValidator(0)]
-    )
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.APPROVED)
-    progress_percent = models.PositiveSmallIntegerField(
-        default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    start_date = models.DateField(null=True, blank=True)
-    target_end_date = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    project_id = models.AutoField(primary_key=True)
+    project_name = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.APPROVED)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    project_date = models.DateField(default=timezone.localdate)
+    barangays = models.ManyToManyField(Barangay, through="BarangayProject", related_name="projects")
 
     class Meta:
-        ordering = ["-updated_at"]
+        ordering = ["-project_date", "-project_id"]
 
     def __str__(self):
-        return f"{self.code} {self.title}"
+        return f"{self.code} {self.project_name}"
 
     def get_absolute_url(self):
         return reverse("project_detail", args=[self.code])
 
     @property
-    def is_overdue(self):
-        return bool(
-            self.target_end_date
-            and self.target_end_date < timezone.localdate()
-            and self.status not in (Status.COMPLETED, Status.CANCELLED)
-        )
+    def code(self):
+        """Public reference code derived from the primary key, e.g. LDF-0042."""
+        return f"LDF-{self.pk:04d}" if self.pk else ""
 
-    @property
-    def remaining_budget(self):
-        return self.budget - self.amount_utilized
-
-    @property
-    def utilization_percent(self):
-        return round(self.amount_utilized / self.budget * 100) if self.budget else 0
-
-    def clean(self):
-        if self.budget is not None and self.amount_utilized is not None and self.amount_utilized > self.budget:
-            raise ValidationError({"amount_utilized": "Amount utilized cannot exceed the approved budget."})
-        
-    def save(self, *args, **kwargs):
-        needs_code = not self.code
-        if needs_code:
-            self.code = "TMP-" + uuid.uuid4().hex[:12]
-        super().save(*args, **kwargs)
-        if needs_code:
-            self.code = f"LDF-{self.fiscal_year}-{self.pk:04d}"
-            super().save(update_fields=["code"])
-
-    def apply_update(self, status, progress, remarks="", user=None, amount_utilized=None):
-        """Record a status change in the history and sync the project's current state."""
-        if status == Status.COMPLETED:
-            progress = 100
-        with transaction.atomic():
-            update = StatusUpdate.objects.create(
-                project=self, status=status, progress_percent=progress, remarks=remarks, updated_by=user
-            )
-            self.status = status
-            self.progress_percent = progress
-            if amount_utilized is not None:
-                self.amount_utilized = amount_utilized
-            self.save(update_fields=["status", "progress_percent", "amount_utilized", "updated_at"])
-        return update
+    @staticmethod
+    def pk_from_code(code):
+        match = re.match(r"^(?:LDF-)?0*(\d+)$", (code or "").strip(), re.IGNORECASE)
+        return int(match.group(1)) if match else None
 
 
-class StatusUpdate(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="updates")
-    status = models.CharField(max_length=20, choices=Status.choices)
-    progress_percent = models.PositiveSmallIntegerField(default=0)
-    remarks = models.TextField(blank=True)
-    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
-    created_at = models.DateTimeField(auto_now_add=True)
+class BarangayProject(models.Model):
+    """Which barangay a project serves, and the sitio (purok/area) within it."""
+
+    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE, related_name="project_links")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="barangay_links")
+    sitio = models.CharField(max_length=50, blank=True)
 
     class Meta:
-        ordering = ["-created_at", "-id"]
+        constraints = [
+            models.UniqueConstraint(fields=["barangay", "project"], name="unique_barangay_project"),
+        ]
 
     def __str__(self):
-        return f"{self.project.code}: {self.get_status_display()}"
+        return f"{self.project.project_name} @ {self.barangay}"

@@ -11,6 +11,7 @@ class StatusCheckTests(TestCase):
         self.assertEqual(r.context["project"], p)
 
     def test_not_found(self):
-        r = self.client.get(reverse("status_check"), {"code": "nope"})
-        self.assertIsNone(r.context["project"])
-        self.assertTrue(r.context["searched"])
+        for code in ("nope", "LDF-9999"):
+            r = self.client.get(reverse("status_check"), {"code": code})
+            self.assertIsNone(r.context["project"])
+            self.assertTrue(r.context["searched"])
