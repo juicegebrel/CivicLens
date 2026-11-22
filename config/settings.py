@@ -15,10 +15,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
-    "accounts",
-    "projects",
-    "dashboard",
-    "statuscheck",
+    "apps.accounts",
+    "apps.projects",
+    "apps.dashboard",
+    "apps.statuscheck",
 ]
 
 MIDDLEWARE = [

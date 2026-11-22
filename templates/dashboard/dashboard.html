@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'css/dashboard/dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>See where every barangay project stands</h1>
+    <p class="lead">Live status of Local Development Fund projects, from approval and bidding to completion. No trip to the CPDO needed.</p>
+    <form class="inline-search" action="{% url 'status_check' %}" method="get">
+      <label for="code">Have a reference code?</label>
+      <div><input id="code" name="code" placeholder="LDF-2026-0001" autocomplete="off"><button class="btn">Check status</button></div>
+    </form>
+    <p class="muted" id="asof">As of {{ stats.as_of }}</p>
+  </div>
+  <figure class="lens" aria-label="Projects by status">
+    <svg id="donut" viewBox="0 0 42 42" role="img"></svg>
+    <figcaption><strong id="total">{{ stats.total }}</strong><span>projects</span></figcaption>
+  </figure>
+</section>
+
+<noscript><p class="notice">Turn on JavaScript to see live charts. Totals: {% for s in stats.statuses %}{{ s.label }} {{ s.count }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p></noscript>
+
+<section class="kpis">
+  <div><strong id="k-allocated">₱{{ stats.total_allocated|floatformat:0|intcomma }}</strong><span>total money allocated</span></div>
+  <div>
+    <strong id="k-utilized">₱{{ stats.total_utilized|floatformat:0|intcomma }}</strong>
+    <span id="k-util-pct">{{ stats.utilization_percent }}% of allocated money tapped</span>
+    <div class="meter" title="Share of allocated money already used"><i id="k-util-bar" style="width:{{ stats.utilization_percent }}%"></i></div>
+  </div>
+  <div><strong id="k-remaining">₱{{ stats.total_remaining|floatformat:0|intcomma }}</strong><span>still available</span></div>
+  <div><strong id="k-progress">{{ stats.avg_progress }}%</strong><span>average project progress</span></div>
+</section>
+
+<section class="two">
+  <div class="panel">
+    <h2>Status breakdown</h2>
+    <ul id="legend" class="legend"></ul>
+  </div>
+  <div class="panel">
+    <h2>Projects by category</h2>
+    <div id="cats"></div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Latest updates</h2>
+  <ul id="recent" class="recent"></ul>
+</section>
+
+{{ stats|json_script:"stats-data" }}
+{% endblock %}
+{% block scripts %}
+<script>window.CIVICLENS = {api: "{% url 'stats_api' %}", list: "{% url 'project_list' %}", detail: "/projects/"};</script>
+<script src="{% static 'js/dashboard/dashboard.js' %}"></script>
+{% endblock %}

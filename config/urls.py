@@ -7,8 +7,8 @@ admin.site.index_title = "Manage LDF projects, barangays and accounts"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls")),      # login, logout, my projects
-    path("projects/", include("projects.urls")),      # search, detail, update status
-    path("check/", include("statuscheck.urls")),      # status checker
-    path("", include("dashboard.urls")),              # home dashboard + stats API
+    path("accounts/", include("apps.accounts.urls")),      # login, logout, my projects
+    path("projects/", include("apps.projects.urls")),      # search, detail, update status
+    path("check/", include("apps.statuscheck.urls")),      # status checker
+    path("", include("apps.dashboard.urls")),              # home dashboard + stats API
 ]

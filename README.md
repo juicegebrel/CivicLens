@@ -10,15 +10,17 @@ Progress monitoring for Local Development Fund (LDF) projects. Barangays and con
 - **Django admin** at `/admin/` to encode projects, barangays, categories and accounts.
 
 ## Project structure
-One Django app per screen, each with its own views, URLs, templates, static files and tests.
+Only the feature apps live in `apps/`. Settings, templates and static files stay at the project root, grouped per app.
 ```
-config/        settings and root URLs
-templates/     base.html (shared layout)
-static/css/    civiclens.css (shared styles)
-projects/      models, admin, seed_demo; project search, detail and update-status screens
-dashboard/     home dashboard, infographics and /api/stats/
-statuscheck/   public status checker (/check/)
-accounts/      login, logout, "My projects", barangay profile, user admin
+config/              settings, root URLs, wsgi
+apps/
+  projects/          models, admin, seed_demo; search, detail and update-status screens
+  dashboard/         home dashboard, infographics and /api/stats/
+  statuscheck/       public status checker (/check/)
+  accounts/          login, logout, register, "My projects", barangay profile
+templates/           base.html, then one folder per app (templates/projects/, ...)
+static/css/          civiclens.css (shared), then css/<app>/<app>.css
+static/js/           js/<app>/<app>.js
 ```
 
 ## Setup
