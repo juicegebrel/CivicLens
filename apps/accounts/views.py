@@ -37,4 +37,5 @@ def my_projects(request):
         "is_city_official": is_city_official(request.user),
         "projects": qs,
         "statuses": status_summary(qs),
+        "can_edit": barangay is not None,
     })

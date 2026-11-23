@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{% if project %}Edit project{% else %}Add project{% endif %}{% endblock %}
+{% block content %}
+<section class="narrow">
+  <p><a href="{% if project %}{{ project.get_absolute_url }}{% else %}{% url 'my_projects' %}{% endif %}">Back</a></p>
+  <h1>{% if project %}Edit project{% else %}Add a project{% endif %}</h1>
+  <p class="lead">{% if project %}{{ project.code }} · {% endif %}Barangay {{ barangay }}</p>
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+        {% for e in field.errors %}<small class="err">{{ e }}</small>{% endfor %}
+      </div>
+    {% endfor %}
+    <button class="btn">{% if project %}Save changes{% else %}Add project{% endif %}</button>
+  </form>
+  <p class="muted">{% if project %}The CPDO updates a project's status as it moves forward.{% else %}New projects start as “Approved”. The CPDO updates the status as the project moves forward.{% endif %}</p>
+</section>
+{% endblock %}

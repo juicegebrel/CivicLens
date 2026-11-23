@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "apps.projects",
     "apps.dashboard",
     "apps.statuscheck",
+    "apps.projectmanager",
 ]
 
 MIDDLEWARE = [

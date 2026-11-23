@@ -5,6 +5,7 @@
 {% if not barangay and not is_city_official %}
   <p class="notice error">Your account is not linked to a barangay yet. Ask the CPDO to link it.</p>
 {% endif %}
+{% if can_edit %}<p><a class="btn" href="{% url 'project_create' %}">Add a project</a></p>{% endif %}
 <ul class="chips">
   {% for s in statuses %}{% if s.count %}<li><a class="badge s-{{ s.key }}" href="{% url 'project_list' %}?status={{ s.key }}{% if barangay %}&barangay={{ barangay.pk }}{% endif %}">{{ s.label }}: {{ s.count }}</a></li>{% endif %}{% endfor %}
 </ul>

@@ -10,5 +10,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),      # login, logout, my projects
     path("projects/", include("apps.projects.urls")),      # search, detail, update status
     path("check/", include("apps.statuscheck.urls")),      # status checker
+    path("manage/", include("apps.projectmanager.urls")),
     path("", include("apps.dashboard.urls")),              # home dashboard + stats API
+    
 ]

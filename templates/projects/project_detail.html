@@ -10,7 +10,10 @@
     <h1>{{ project.project_name }}</h1>
     <p><span class="badge big s-{{ project.status }}">{{ project.get_status_display }}</span></p>
   </div>
-  {% if can_update %}<a class="btn" href="{% url 'update_status' project.code %}">Update status</a>{% endif %}
+  <div>
+    {% if can_edit %}<a class="btn" href="{% url 'project_edit' project.code %}">Edit project</a>{% endif %}
+    {% if can_update %}<a class="btn" href="{% url 'update_status' project.code %}">Update status</a>{% endif %}
+  </div>
 </div>
 
 <dl class="facts">
