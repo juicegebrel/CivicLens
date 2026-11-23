@@ -1,7 +1,16 @@
 {% load humanize %}
 <div class="scroll">
 <table>
-  <thead><tr><th>Project</th><th>Barangay and sitio</th><th>Status</th><th>Date</th><th class="num">Amount (₱)</th></tr></thead>
+  <thead>
+    <tr>
+      <th>Project</th>
+      <th>Barangay and sitio</th>
+      <th>Status</th>
+      <th>Date</th>
+      <th class="num">Amount (₱)</th>
+      {% if can_edit %}<th></th>{% endif %}
+    </tr>
+  </thead>
   <tbody>
   {% for p in projects %}
     <tr>
@@ -10,9 +19,10 @@
       <td><span class="badge s-{{ p.status }}">{{ p.get_status_display }}</span></td>
       <td>{{ p.project_date|date:"M d, Y" }}</td>
       <td class="num">{{ p.amount|floatformat:2|intcomma }}</td>
+      {% if can_edit %}<td><a href="{% url 'project_edit' p.code %}">Edit</a></td>{% endif %}
     </tr>
   {% empty %}
-    <tr><td colspan="5" class="empty">No projects match. Try a different status, barangay or keyword.</td></tr>
+    <tr><td colspan="{% if can_edit %}6{% else %}5{% endif %}" class="empty">No projects match. Try a different status, barangay or keyword.</td></tr>
   {% endfor %}
   </tbody>
 </table>
